@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import ConnectionTest from '../components/ConnectionTest';
 import './Home.css';
 
 const featuredPosts = [
@@ -48,6 +49,11 @@ function Home() {
                         <Link to="/login" className="btn btn-secondary">Sign In</Link>
                     </div>
                 </div>
+                {/* Add the connection test */}
+                  <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
+                    <ConnectionTest />
+               </div>
+
             </section>
 
             {/* Featured Posts */}
