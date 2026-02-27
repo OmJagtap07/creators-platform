@@ -1,6 +1,8 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
+// ── Static placeholder data (unchanged from before) ──────────
 const stats = [
     { label: 'Posts Published', value: '12', icon: '📝' },
     { label: 'Total Views', value: '4,821', icon: '👁️' },
@@ -15,17 +17,113 @@ const recentPosts = [
     { id: 4, title: 'Web Accessibility Fundamentals', date: '—', views: 0, status: 'Draft' },
 ];
 
+// ── JWT expiry helper ─────────────────────────────────────────
+const isTokenExpired = (token) => {
+    if (!token) return true;
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.exp < Date.now() / 1000;
+    } catch {
+        return true;
+    }
+};
+
 function Dashboard() {
+    const [user, setUser] = useState(null);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const userData = localStorage.getItem('user');
+
+        // Redirect to login if not authenticated or token expired
+        if (!token || !userData || isTokenExpired(token)) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            navigate('/login');
+            return;
+        }
+
+        try {
+            setUser(JSON.parse(userData));
+        } catch {
+            navigate('/login');
+        }
+    }, [navigate]);
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+    };
+
+    if (!user) {
+        return (
+            <div style={{ textAlign: 'center', padding: '4rem', color: '#94a3b8' }}>
+                Loading…
+            </div>
+        );
+    }
+
     return (
         <main className="dashboard">
             <div className="dashboard-inner">
-                {/* Welcome */}
+
+                {/* Welcome header */}
                 <div className="dashboard-header">
                     <div>
-                        <h1>Welcome back, Creator 👋</h1>
+                        <h1>Welcome back, {user.name} 👋</h1>
                         <p className="dashboard-subtitle">Here&apos;s what&apos;s happening with your blog</p>
                     </div>
-                    <Link to="#" className="btn btn-primary">+ New Post</Link>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <Link to="#" className="btn btn-primary">+ New Post</Link>
+                        <button
+                            onClick={handleLogout}
+                            className="btn btn-logout"
+                            style={{
+                                padding: '0.55rem 1.2rem',
+                                backgroundColor: 'transparent',
+                                border: '1px solid #475569',
+                                borderRadius: '8px',
+                                color: '#94a3b8',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                fontWeight: '500',
+                                transition: 'border-color 0.2s, color 0.2s',
+                            }}
+                            onMouseOver={e => { e.currentTarget.style.borderColor = '#f87171'; e.currentTarget.style.color = '#f87171'; }}
+                            onMouseOut={e => { e.currentTarget.style.borderColor = '#475569'; e.currentTarget.style.color = '#94a3b8'; }}
+                        >
+                            Logout
+                        </button>
+                    </div>
+                </div>
+
+                {/* User info card */}
+                <div style={{
+                    background: '#1e293b',
+                    border: '1px solid #334155',
+                    borderRadius: '12px',
+                    padding: '1.5rem 2rem',
+                    marginBottom: '2rem',
+                    display: 'flex',
+                    gap: '2.5rem',
+                    flexWrap: 'wrap',
+                }}>
+                    <div>
+                        <span style={{ color: '#64748b', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</span>
+                        <p style={{ color: '#f1f5f9', fontWeight: '600', marginTop: '0.2rem' }}>{user.name}</p>
+                    </div>
+                    <div>
+                        <span style={{ color: '#64748b', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email</span>
+                        <p style={{ color: '#f1f5f9', fontWeight: '600', marginTop: '0.2rem' }}>{user.email}</p>
+                    </div>
+                    <div>
+                        <span style={{ color: '#64748b', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Member Since</span>
+                        <p style={{ color: '#f1f5f9', fontWeight: '600', marginTop: '0.2rem' }}>
+                            {new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                    </div>
                 </div>
 
                 {/* Stats */}
@@ -69,6 +167,7 @@ function Dashboard() {
                         </table>
                     </div>
                 </div>
+
             </div>
         </main>
     );
