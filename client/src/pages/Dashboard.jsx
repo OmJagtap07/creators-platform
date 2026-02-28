@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Dashboard.css';
 
-// ── Static placeholder data (unchanged from before) ──────────
+// ── Static placeholder data ───────────────────────────────────
 const stats = [
     { label: 'Posts Published', value: '12', icon: '📝' },
     { label: 'Total Views', value: '4,821', icon: '👁️' },
@@ -17,52 +17,21 @@ const recentPosts = [
     { id: 4, title: 'Web Accessibility Fundamentals', date: '—', views: 0, status: 'Draft' },
 ];
 
-// ── JWT expiry helper ─────────────────────────────────────────
-const isTokenExpired = (token) => {
-    if (!token) return true;
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.exp < Date.now() / 1000;
-    } catch {
-        return true;
-    }
-};
-
 function Dashboard() {
-    const [user, setUser] = useState(null);
-    const navigate = useNavigate();
+    const { user, logout, loading } = useAuth();
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        const userData = localStorage.getItem('user');
-
-        // Redirect to login if not authenticated or token expired
-        if (!token || !userData || isTokenExpired(token)) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            navigate('/login');
-            return;
-        }
-
-        try {
-            setUser(JSON.parse(userData));
-        } catch {
-            navigate('/login');
-        }
-    }, [navigate]);
-
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        navigate('/login');
-    };
-
-    if (!user) {
+    // Wait for AuthProvider to finish reading localStorage
+    if (loading) {
         return (
             <div style={{ textAlign: 'center', padding: '4rem', color: '#94a3b8' }}>
                 Loading…
             </div>
         );
+    }
+
+    // Redirect if not authenticated
+    if (!user) {
+        return <Navigate to="/login" replace />;
     }
 
     return (
@@ -78,7 +47,7 @@ function Dashboard() {
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                         <Link to="#" className="btn btn-primary">+ New Post</Link>
                         <button
-                            onClick={handleLogout}
+                            onClick={logout}
                             className="btn btn-logout"
                             style={{
                                 padding: '0.55rem 1.2rem',

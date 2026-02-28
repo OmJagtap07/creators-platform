@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Auth.css';
 
 function Login() {
@@ -8,6 +9,7 @@ function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState('');
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     // ── Handlers ─────────────────────────────────────────────
     const handleChange = (e) => {
@@ -50,9 +52,8 @@ function Login() {
             const data = await response.json();
 
             if (response.ok) {
-                // Store JWT and user data
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
+                // Store JWT via AuthContext (handles state + localStorage)
+                login(data.user, data.token);
                 setFormData({ email: '', password: '' });
                 navigate('/dashboard');
             } else {

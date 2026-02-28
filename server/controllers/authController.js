@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 // @route   POST /api/auth/login
 // @access  Public
 export const loginUser = async (req, res) => {
-    try {
+    try { 
         const { email, password } = req.body;
 
         // 1. Validate input
