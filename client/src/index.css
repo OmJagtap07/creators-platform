@@ -44,3 +44,14 @@ h5,
 h6 {
   line-height: 1.2;
 }
+
+/* ========== Animations ========== */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}

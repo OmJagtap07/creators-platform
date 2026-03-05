@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
 
@@ -9,6 +9,7 @@ function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
     const { login } = useAuth();
 
     // ── Handlers ─────────────────────────────────────────────
@@ -55,7 +56,9 @@ function Login() {
                 // Store JWT via AuthContext (handles state + localStorage)
                 login(data.user, data.token);
                 setFormData({ email: '', password: '' });
-                navigate('/dashboard');
+                // Redirect to the page user originally tried to visit, or /dashboard
+                const from = location.state?.from?.pathname || '/dashboard';
+                navigate(from, { replace: true });
             } else {
                 setApiError(data.message || 'Login failed. Please try again.');
             }
