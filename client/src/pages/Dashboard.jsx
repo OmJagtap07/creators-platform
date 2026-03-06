@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 import './Dashboard.css';
 
 // ── Static placeholder data ───────────────────────────────────
@@ -19,6 +21,32 @@ const recentPosts = [
 
 function Dashboard() {
     const { user, logout, loading } = useAuth();
+
+    // ── Authenticated API demo ─────────────────────────────────
+    const [users, setUsers] = useState([]);
+    const [apiStatus, setApiStatus] = useState('idle'); // idle | loading | success | error
+
+    const fetchUsers = async () => {
+        setApiStatus('loading');
+        try {
+            // Token is attached automatically by the request interceptor in api.js
+            const response = await api.get('/api/users');
+            setUsers(response.data);
+            setApiStatus('success');
+            console.log('✅ Authenticated API call succeeded. Users fetched:', response.data.length);
+        } catch (error) {
+            setApiStatus('error');
+            console.error('❌ API call failed:', error.response?.data?.message || error.message);
+        }
+    };
+
+    // Fetch users automatically on mount to demonstrate interceptor
+    useEffect(() => {
+        if (user) {
+            fetchUsers();
+        }
+    }, [user]);
+
 
     // Wait for AuthProvider to finish reading localStorage
     if (loading) {
@@ -106,7 +134,69 @@ function Dashboard() {
                     ))}
                 </div>
 
+                {/* ── Authenticated API Demo ────────────────────────────── */}
+                <div style={{
+                    background: '#1e293b',
+                    border: '1px solid #334155',
+                    borderRadius: '12px',
+                    padding: '1.5rem 2rem',
+                    marginBottom: '2rem',
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+                        <div>
+                            <h2 style={{ color: '#f1f5f9', fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+                                🔐 Authenticated API Demo
+                            </h2>
+                            <p style={{ color: '#64748b', fontSize: '0.82rem', marginTop: '0.2rem' }}>
+                                Token is attached automatically via Axios request interceptor
+                            </p>
+                        </div>
+                        <button
+                            id="fetch-users-btn"
+                            onClick={fetchUsers}
+                            disabled={apiStatus === 'loading'}
+                            style={{
+                                padding: '0.5rem 1.2rem',
+                                background: apiStatus === 'loading' ? '#334155' : '#3b82f6',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: apiStatus === 'loading' ? 'not-allowed' : 'pointer',
+                                fontSize: '0.85rem',
+                                fontWeight: '500',
+                                transition: 'background 0.2s',
+                            }}
+                        >
+                            {apiStatus === 'loading' ? 'Fetching…' : '↻ Fetch Users'}
+                        </button>
+                    </div>
+
+                    {/* Status indicator */}
+                    {apiStatus === 'success' && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                            <span style={{ color: '#4ade80', fontSize: '0.85rem' }}>✅</span>
+                            <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+                                <code style={{ color: '#4ade80', background: '#0f172a', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>GET /api/users</code>
+                                {' '}returned <strong style={{ color: '#f1f5f9' }}>{users.length} user{users.length !== 1 ? 's' : ''}</strong>.
+                                Check the <strong style={{ color: '#f1f5f9' }}>Network tab</strong> → request headers → <code style={{ color: '#38bdf8', background: '#0f172a', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Authorization: Bearer …</code>
+                            </span>
+                        </div>
+                    )}
+                    {apiStatus === 'error' && (
+                        <p style={{ color: '#f87171', fontSize: '0.85rem', margin: 0 }}>
+                            ❌ Request failed — see browser console for details.
+                        </p>
+                    )}
+                    {apiStatus === 'loading' && (
+                        <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>⏳ Sending authenticated request…</p>
+                    )}
+                    {apiStatus === 'idle' && (
+                        <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>Click the button to fire an authenticated API request.</p>
+                    )}
+                </div>
+
                 {/* Recent Posts Table */}
+
                 <div className="recent-section">
                     <h2 className="section-heading">Recent Posts</h2>
                     <div className="table-wrapper">

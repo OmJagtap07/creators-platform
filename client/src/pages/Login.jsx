@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 import './Auth.css';
 
 function Login() {
@@ -41,30 +42,27 @@ function Login() {
 
         setIsLoading(true);
         try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: formData.email.trim().toLowerCase(),
-                    password: formData.password,
-                }),
+            // api.post automatically sets Content-Type: application/json
+            const response = await api.post('/api/auth/login', {
+                email: formData.email.trim().toLowerCase(),
+                password: formData.password,
             });
 
-            const data = await response.json();
+            // Axios puts response body in response.data
+            const data = response.data;
 
-            if (response.ok) {
-                // Store JWT via AuthContext (handles state + localStorage)
-                login(data.user, data.token);
-                setFormData({ email: '', password: '' });
-                // Redirect to the page user originally tried to visit, or /dashboard
-                const from = location.state?.from?.pathname || '/dashboard';
-                navigate(from, { replace: true });
-            } else {
-                setApiError(data.message || 'Login failed. Please try again.');
-            }
+            // Store JWT via AuthContext (handles state + localStorage)
+            login(data.user, data.token);
+            setFormData({ email: '', password: '' });
+
+            // Redirect to the page user originally tried to visit, or /dashboard
+            const from = location.state?.from?.pathname || '/dashboard';
+            navigate(from, { replace: true });
         } catch (err) {
+            // Axios throws on non-2xx; error.response contains server data
+            const message = err.response?.data?.message || 'Unable to connect to server. Please try again.';
             console.error('Login error:', err);
-            setApiError('Unable to connect to server. Please try again.');
+            setApiError(message);
         } finally {
             setIsLoading(false);
         }

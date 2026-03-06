@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import './Auth.css';
 
 function Register() {
@@ -110,25 +111,21 @@ function Register() {
                 password: formData.password,
             };
 
-            const response = await fetch('/api/users/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(registrationData),
-            });
+            // api.post sets Content-Type: application/json automatically
+            const response = await api.post('/api/users/register', registrationData);
 
-            const data = await response.json();
+            // Axios puts response body in response.data
+            console.log('Registration successful:', response.data);
 
-            if (response.ok) {
-                setSuccessMessage('🎉 Account created successfully! Redirecting to login…');
-                // Clear the form
-                setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-                // Redirect after 2 s
-                setTimeout(() => navigate('/login'), 2000);
-            } else {
-                setApiError(data.message || 'Registration failed. Please try again.');
-            }
-        } catch {
-            setApiError('Unable to connect to server. Please check your connection and try again.');
+            setSuccessMessage('🎉 Account created successfully! Redirecting to login…');
+            // Clear the form
+            setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+            // Redirect after 2s
+            setTimeout(() => navigate('/login'), 2000);
+        } catch (err) {
+            // Axios throws on non-2xx; error.response contains server data
+            const message = err.response?.data?.message || 'Registration failed. Please try again.';
+            setApiError(message);
         } finally {
             setIsLoading(false);
         }
