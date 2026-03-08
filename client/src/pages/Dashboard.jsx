@@ -1,79 +1,66 @@
-import { useState, useEffect } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import './Dashboard.css';
 
-// ── Static placeholder data ───────────────────────────────────
-const stats = [
-    { label: 'Posts Published', value: '12', icon: '📝' },
-    { label: 'Total Views', value: '4,821', icon: '👁️' },
-    { label: 'Followers', value: '238', icon: '👥' },
-    { label: 'Drafts', value: '3', icon: '📂' },
-];
-
-const recentPosts = [
-    { id: 1, title: 'My Journey into Open Source', date: 'Feb 21, 2025', views: 312, status: 'Published' },
-    { id: 2, title: 'Understanding Async/Await in JS', date: 'Feb 17, 2025', views: 891, status: 'Published' },
-    { id: 3, title: 'Why I Switched to TypeScript', date: 'Feb 10, 2025', views: 1203, status: 'Published' },
-    { id: 4, title: 'Web Accessibility Fundamentals', date: '—', views: 0, status: 'Draft' },
-];
+const CATEGORY_COLORS = {
+    Technology: '#3b82f6',
+    Lifestyle: '#a855f7',
+    Travel: '#10b981',
+    Food: '#f59e0b',
+};
 
 function Dashboard() {
-    const { user, logout, loading } = useAuth();
+    const { user, logout } = useAuth();
 
-    // ── Authenticated API demo ─────────────────────────────────
-    const [users, setUsers] = useState([]);
-    const [apiStatus, setApiStatus] = useState('idle'); // idle | loading | success | error
+    // ── Posts state ─────────────────────────────────────────────
+    const [posts, setPosts] = useState([]);
+    const [pagination, setPagination] = useState({});
+    const [currentPage, setCurrentPage] = useState(1);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
 
-    const fetchUsers = async () => {
-        setApiStatus('loading');
+    // ── Fetch paginated posts ────────────────────────────────────
+    const fetchPosts = useCallback(async (page) => {
+        setIsLoading(true);
+        setError('');
         try {
-            // Token is attached automatically by the request interceptor in api.js
-            const response = await api.get('/api/users');
-            setUsers(response.data);
-            setApiStatus('success');
-            console.log('✅ Authenticated API call succeeded. Users fetched:', response.data.length);
-        } catch (error) {
-            setApiStatus('error');
-            console.error('❌ API call failed:', error.response?.data?.message || error.message);
+            const res = await api.get(`/api/posts?page=${page}&limit=5`);
+            setPosts(res.data.data);
+            setPagination(res.data.pagination);
+        } catch (err) {
+            setError('Failed to load posts. Please try again.');
+            console.error('Fetch posts error:', err);
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, []);
 
-    // Fetch users automatically on mount to demonstrate interceptor
     useEffect(() => {
-        if (user) {
-            fetchUsers();
-        }
-    }, [user]);
+        if (user) fetchPosts(currentPage);
+    }, [user, currentPage, fetchPosts]);
 
+    const handlePageChange = (newPage) => setCurrentPage(newPage);
 
-    // Wait for AuthProvider to finish reading localStorage
-    if (loading) {
-        return (
-            <div style={{ textAlign: 'center', padding: '4rem', color: '#94a3b8' }}>
-                Loading…
-            </div>
-        );
-    }
-
-    // Redirect if not authenticated
-    if (!user) {
-        return <Navigate to="/login" replace />;
-    }
+    // ── Derived stats from real data ─────────────────────────────
+    const publishedCount = posts.filter((p) => p.status === 'published').length;
+    const draftCount = posts.filter((p) => p.status === 'draft').length;
 
     return (
         <main className="dashboard">
             <div className="dashboard-inner">
 
-                {/* Welcome header */}
+                {/* ── Welcome Header ─────────────────────────────── */}
                 <div className="dashboard-header">
                     <div>
-                        <h1>Welcome back, {user.name} 👋</h1>
-                        <p className="dashboard-subtitle">Here&apos;s what&apos;s happening with your blog</p>
+                        <h1>Welcome back, {user?.name} 👋</h1>
+                        <p className="dashboard-subtitle">Manage and create your blog posts</p>
                     </div>
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <Link to="#" className="btn btn-primary">+ New Post</Link>
+                        <Link to="/create" id="new-post-btn" className="btn btn-primary">
+                            + New Post
+                        </Link>
                         <button
                             onClick={logout}
                             className="btn btn-logout"
@@ -96,36 +83,36 @@ function Dashboard() {
                     </div>
                 </div>
 
-                {/* User info card */}
+                {/* ── User Info Card ──────────────────────────────── */}
                 <div style={{
-                    background: '#1e293b',
-                    border: '1px solid #334155',
-                    borderRadius: '12px',
-                    padding: '1.5rem 2rem',
-                    marginBottom: '2rem',
-                    display: 'flex',
-                    gap: '2.5rem',
-                    flexWrap: 'wrap',
+                    background: '#1e293b', border: '1px solid #334155',
+                    borderRadius: '12px', padding: '1.5rem 2rem',
+                    marginBottom: '2rem', display: 'flex', gap: '2.5rem', flexWrap: 'wrap',
                 }}>
                     <div>
                         <span style={{ color: '#64748b', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</span>
-                        <p style={{ color: '#f1f5f9', fontWeight: '600', marginTop: '0.2rem' }}>{user.name}</p>
+                        <p style={{ color: '#f1f5f9', fontWeight: '600', marginTop: '0.2rem' }}>{user?.name}</p>
                     </div>
                     <div>
                         <span style={{ color: '#64748b', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email</span>
-                        <p style={{ color: '#f1f5f9', fontWeight: '600', marginTop: '0.2rem' }}>{user.email}</p>
+                        <p style={{ color: '#f1f5f9', fontWeight: '600', marginTop: '0.2rem' }}>{user?.email}</p>
                     </div>
                     <div>
                         <span style={{ color: '#64748b', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Member Since</span>
                         <p style={{ color: '#f1f5f9', fontWeight: '600', marginTop: '0.2rem' }}>
-                            {new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'}
                         </p>
                     </div>
                 </div>
 
-                {/* Stats */}
+                {/* ── Stats ───────────────────────────────────────── */}
                 <div className="stats-grid">
-                    {stats.map((stat) => (
+                    {[
+                        { label: 'Total Posts', value: pagination.total ?? '—', icon: '📝' },
+                        { label: 'Total Pages', value: pagination.totalPages ?? '—', icon: '📄' },
+                        { label: 'Published', value: publishedCount, icon: '🚀' },
+                        { label: 'Drafts', value: draftCount, icon: '📂' },
+                    ].map((stat) => (
                         <div key={stat.label} className="stat-card">
                             <span className="stat-icon">{stat.icon}</span>
                             <span className="stat-value">{stat.value}</span>
@@ -134,97 +121,118 @@ function Dashboard() {
                     ))}
                 </div>
 
-                {/* ── Authenticated API Demo ────────────────────────────── */}
-                <div style={{
-                    background: '#1e293b',
-                    border: '1px solid #334155',
-                    borderRadius: '12px',
-                    padding: '1.5rem 2rem',
-                    marginBottom: '2rem',
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
-                        <div>
-                            <h2 style={{ color: '#f1f5f9', fontSize: '1rem', fontWeight: '600', margin: 0 }}>
-                                🔐 Authenticated API Demo
-                            </h2>
-                            <p style={{ color: '#64748b', fontSize: '0.82rem', marginTop: '0.2rem' }}>
-                                Token is attached automatically via Axios request interceptor
-                            </p>
-                        </div>
-                        <button
-                            id="fetch-users-btn"
-                            onClick={fetchUsers}
-                            disabled={apiStatus === 'loading'}
-                            style={{
-                                padding: '0.5rem 1.2rem',
-                                background: apiStatus === 'loading' ? '#334155' : '#3b82f6',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '8px',
-                                cursor: apiStatus === 'loading' ? 'not-allowed' : 'pointer',
-                                fontSize: '0.85rem',
-                                fontWeight: '500',
-                                transition: 'background 0.2s',
-                            }}
-                        >
-                            {apiStatus === 'loading' ? 'Fetching…' : '↻ Fetch Users'}
-                        </button>
-                    </div>
-
-                    {/* Status indicator */}
-                    {apiStatus === 'success' && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                            <span style={{ color: '#4ade80', fontSize: '0.85rem' }}>✅</span>
-                            <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
-                                <code style={{ color: '#4ade80', background: '#0f172a', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>GET /api/users</code>
-                                {' '}returned <strong style={{ color: '#f1f5f9' }}>{users.length} user{users.length !== 1 ? 's' : ''}</strong>.
-                                Check the <strong style={{ color: '#f1f5f9' }}>Network tab</strong> → request headers → <code style={{ color: '#38bdf8', background: '#0f172a', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Authorization: Bearer …</code>
-                            </span>
-                        </div>
-                    )}
-                    {apiStatus === 'error' && (
-                        <p style={{ color: '#f87171', fontSize: '0.85rem', margin: 0 }}>
-                            ❌ Request failed — see browser console for details.
-                        </p>
-                    )}
-                    {apiStatus === 'loading' && (
-                        <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>⏳ Sending authenticated request…</p>
-                    )}
-                    {apiStatus === 'idle' && (
-                        <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>Click the button to fire an authenticated API request.</p>
-                    )}
-                </div>
-
-                {/* Recent Posts Table */}
-
+                {/* ── Posts Section ───────────────────────────────── */}
                 <div className="recent-section">
-                    <h2 className="section-heading">Recent Posts</h2>
-                    <div className="table-wrapper">
-                        <table className="posts-table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Date</th>
-                                    <th>Views</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {recentPosts.map((post) => (
-                                    <tr key={post.id}>
-                                        <td className="post-title-cell">{post.title}</td>
-                                        <td>{post.date}</td>
-                                        <td>{post.views > 0 ? post.views.toLocaleString() : '—'}</td>
-                                        <td>
-                                            <span className={`status-badge ${post.status.toLowerCase()}`}>
-                                                {post.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h2 className="section-heading" style={{ margin: 0 }}>Your Posts</h2>
+                        {pagination.total > 0 && (
+                            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>
+                                {pagination.total} post{pagination.total !== 1 ? 's' : ''} total
+                            </span>
+                        )}
                     </div>
+
+                    {/* Error State */}
+                    {error && (
+                        <div style={{
+                            background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                            color: '#fca5a5', borderRadius: '8px', padding: '1rem', marginBottom: '1rem', fontSize: '0.875rem',
+                        }}>
+                            ⚠️ {error}
+                        </div>
+                    )}
+
+                    {/* Loading State */}
+                    {isLoading ? (
+                        <div style={{ textAlign: 'center', padding: '3rem', color: '#475569' }}>
+                            <div style={{
+                                display: 'inline-block', width: '32px', height: '32px',
+                                border: '3px solid #334155', borderTopColor: '#3b82f6',
+                                borderRadius: '50%', animation: 'spin 0.8s linear infinite',
+                                marginBottom: '0.75rem',
+                            }} />
+                            <p style={{ margin: 0, fontSize: '0.9rem' }}>Loading posts…</p>
+                        </div>
+                    ) : !error && posts.length === 0 ? (
+                        /* Empty State */
+                        <div style={{
+                            textAlign: 'center', padding: '3.5rem 2rem',
+                            background: '#1e293b', borderRadius: '12px',
+                            border: '1px dashed #334155',
+                        }}>
+                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✍️</div>
+                            <h3 style={{ color: '#f1f5f9', fontWeight: '600', margin: '0 0 0.5rem' }}>No posts yet</h3>
+                            <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0 0 1.5rem' }}>
+                                Start writing and share your ideas with the world.
+                            </p>
+                            <Link to="/create" className="btn btn-primary">+ Create Your First Post</Link>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Posts Cards */}
+                            <div className="posts-cards">
+                                {posts.map((post) => (
+                                    <div key={post._id} className="post-card">
+                                        <div className="post-card-header">
+                                            <h3 className="post-card-title">{post.title}</h3>
+                                            <span className={`status-badge ${post.status}`}>{post.status}</span>
+                                        </div>
+
+                                        <p className="post-card-preview">
+                                            {post.content.length > 160
+                                                ? post.content.slice(0, 160) + '…'
+                                                : post.content}
+                                        </p>
+
+                                        <div className="post-card-meta">
+                                            <span
+                                                className="category-tag"
+                                                style={{
+                                                    color: CATEGORY_COLORS[post.category] || '#64748b',
+                                                    borderColor: CATEGORY_COLORS[post.category] || '#64748b',
+                                                }}
+                                            >
+                                                {post.category}
+                                            </span>
+                                            <span className="post-date">
+                                                {new Date(post.createdAt).toLocaleDateString('en-US', {
+                                                    year: 'numeric', month: 'short', day: 'numeric',
+                                                })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Pagination Controls */}
+                            {pagination.totalPages > 1 && (
+                                <div className="pagination">
+                                    <button
+                                        id="prev-page-btn"
+                                        className="pagination-btn"
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={!pagination.hasPrevPage}
+                                    >
+                                        ← Previous
+                                    </button>
+
+                                    <span className="pagination-info">
+                                        Page <strong>{pagination.page}</strong> of <strong>{pagination.totalPages}</strong>
+                                        &nbsp;&middot;&nbsp;{pagination.total} posts
+                                    </span>
+
+                                    <button
+                                        id="next-page-btn"
+                                        className="pagination-btn"
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={!pagination.hasNextPage}
+                                    >
+                                        Next →
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
 
             </div>
