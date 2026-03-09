@@ -260,3 +260,55 @@
         transform: rotate(360deg);
     }
 }
+/* -- Post Card Action Buttons -------------------------------- */
+.post-card-actions {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.9rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #1e3a5f;
+}
+
+.btn-card-edit,
+.btn-card-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 7px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, opacity 0.2s;
+    text-decoration: none;
+    border: 1px solid transparent;
+}
+
+.btn-card-edit {
+    background: rgba(99, 102, 241, 0.12);
+    color: #818cf8;
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.btn-card-edit:hover {
+    background: rgba(99, 102, 241, 0.22);
+    border-color: #818cf8;
+    color: #c7d2fe;
+}
+
+.btn-card-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.25);
+}
+
+.btn-card-delete:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #f87171;
+    color: #fca5a5;
+}
+
+.btn-card-delete:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

@@ -1,12 +1,22 @@
 import express from 'express';
 import { protect } from '../middleware/auth.js';
-import { createPost, getPosts } from '../controllers/postController.js';
+import {
+    createPost,
+    getPosts,
+    getPostById,
+    updatePost,
+    deletePost,
+} from '../controllers/postController.js';
 
 const router = express.Router();
 
-// @route   POST /api/posts  — Create a new post (protected)
-// @route   GET  /api/posts  — Get paginated posts for logged-in user (protected)
+// Collection routes (specific before parameterised)
 router.post('/', protect, createPost);
 router.get('/', protect, getPosts);
+
+// Single-resource routes
+router.get('/:id', protect, getPostById);   // Get post by ID
+router.put('/:id', protect, updatePost);    // Update post
+router.delete('/:id', protect, deletePost);    // Delete post
 
 export default router;

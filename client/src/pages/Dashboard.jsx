@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import './Dashboard.css';
@@ -20,6 +20,9 @@ function Dashboard() {
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
+    const [deletingId, setDeletingId] = useState(null); // tracks which post is being deleted
+
+    const navigate = useNavigate();
 
     // ── Fetch paginated posts ────────────────────────────────────
     const fetchPosts = useCallback(async (page) => {
@@ -42,6 +45,29 @@ function Dashboard() {
     }, [user, currentPage, fetchPosts]);
 
     const handlePageChange = (newPage) => setCurrentPage(newPage);
+
+    // ── Delete handler ───────────────────────────────────────────
+    const handleDelete = async (postId) => {
+        const confirmed = window.confirm(
+            'Are you sure you want to delete this post? This action cannot be undone.'
+        );
+        if (!confirmed) return;
+
+        setDeletingId(postId);
+        try {
+            const res = await api.delete(`/api/posts/${postId}`);
+            if (res.data.success) {
+                // Optimistic update — remove from UI immediately
+                setPosts((prev) => prev.filter((p) => p._id !== postId));
+                setPagination((prev) => ({ ...prev, total: prev.total - 1 }));
+            }
+        } catch (err) {
+            console.error('Delete error:', err);
+            alert(err.response?.data?.message || 'Failed to delete post. Please try again.');
+        } finally {
+            setDeletingId(null);
+        }
+    };
 
     // ── Derived stats from real data ─────────────────────────────
     const publishedCount = posts.filter((p) => p.status === 'published').length;
@@ -199,6 +225,25 @@ function Dashboard() {
                                                     year: 'numeric', month: 'short', day: 'numeric',
                                                 })}
                                             </span>
+                                        </div>
+
+                                        {/* ── Action Buttons ── */}
+                                        <div className="post-card-actions">
+                                            <Link
+                                                to={`/edit/${post._id}`}
+                                                className="btn-card-edit"
+                                                id={`edit-btn-${post._id}`}
+                                            >
+                                                ✏️ Edit
+                                            </Link>
+                                            <button
+                                                onClick={() => handleDelete(post._id)}
+                                                className="btn-card-delete"
+                                                id={`delete-btn-${post._id}`}
+                                                disabled={deletingId === post._id}
+                                            >
+                                                {deletingId === post._id ? 'Deleting…' : '🗑️ Delete'}
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
