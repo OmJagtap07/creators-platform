@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -23,6 +25,17 @@ function App() {
       <AuthProvider>
         <div className="app-wrapper">
           <Header />
+          <ToastContainer
+            position="top-right"
+            autoClose={4000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="dark"
+          />
           <Routes>
             {/* Public routes — always accessible */}
             <Route path="/" element={<Home />} />

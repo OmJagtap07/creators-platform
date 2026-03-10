@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import api from '../services/api';
 import './CreatePost.css'; // Re-use existing form styles
 
@@ -17,8 +18,6 @@ const EditPost = () => {
     });
     const [isLoading, setIsLoading] = useState(true);  // fetching post
     const [isSaving, setIsSaving] = useState(false);   // submitting update
-    const [error, setError] = useState('');
-    const [fetchError, setFetchError] = useState('');
 
     // ── Fetch existing post data on mount ────────────────────────
     useEffect(() => {
@@ -33,8 +32,9 @@ const EditPost = () => {
                     status: post.status,
                 });
             } catch (err) {
-                console.error('Fetch post error:', err);
-                setFetchError(err.response?.data?.message || 'Failed to load post.');
+                const msg = err.response?.data?.message || 'Failed to load post.';
+                toast.error(msg);
+                navigate('/dashboard');
             } finally {
                 setIsLoading(false);
             }
@@ -49,10 +49,9 @@ const EditPost = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
 
         if (formData.content.length < 10) {
-            setError('Content must be at least 10 characters.');
+            toast.error('Content must be at least 10 characters.');
             return;
         }
 
@@ -60,10 +59,12 @@ const EditPost = () => {
         try {
             const res = await api.put(`/api/posts/${id}`, formData);
             if (res.data.success) {
+                toast.success('Post updated successfully!');
                 navigate('/dashboard');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to update post. Please try again.');
+            const msg = err.response?.data?.message || 'Failed to update post. Please try again.';
+            toast.error(msg);
         } finally {
             setIsSaving(false);
         }
@@ -88,22 +89,7 @@ const EditPost = () => {
         );
     }
 
-    // ── Fetch error (e.g. 403 / 404) ────────────────────────────
-    if (fetchError) {
-        return (
-            <main className="create-page">
-                <div className="create-inner" style={{ textAlign: 'center', paddingTop: '4rem' }}>
-                    <div style={{
-                        background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-                        color: '#fca5a5', borderRadius: '12px', padding: '2rem',
-                    }}>
-                        <p style={{ margin: '0 0 1rem', fontSize: '1rem' }}>⚠️ {fetchError}</p>
-                        <Link to="/dashboard" className="btn-cancel">← Back to Dashboard</Link>
-                    </div>
-                </div>
-            </main>
-        );
-    }
+    // ── Fetch error handled via toast + redirect, no render needed ──
 
     return (
         <main className="create-page">
@@ -120,13 +106,6 @@ const EditPost = () => {
                         <h1 className="create-title">Edit Post</h1>
                         <p className="create-subtitle">Update your post details below</p>
                     </div>
-
-                    {/* Error Banner */}
-                    {error && (
-                        <div className="create-error" role="alert">
-                            <span>⚠️</span> {error}
-                        </div>
-                    )}
 
                     <form onSubmit={handleSubmit} className="create-form">
                         {/* Title */}

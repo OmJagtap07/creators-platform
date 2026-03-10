@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 import api from '../services/api';
 import './Dashboard.css';
 
@@ -19,7 +20,6 @@ function Dashboard() {
     const [pagination, setPagination] = useState({});
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState('');
     const [deletingId, setDeletingId] = useState(null); // tracks which post is being deleted
 
     const navigate = useNavigate();
@@ -27,13 +27,13 @@ function Dashboard() {
     // ── Fetch paginated posts ────────────────────────────────────
     const fetchPosts = useCallback(async (page) => {
         setIsLoading(true);
-        setError('');
         try {
             const res = await api.get(`/api/posts?page=${page}&limit=5`);
             setPosts(res.data.data);
             setPagination(res.data.pagination);
         } catch (err) {
-            setError('Failed to load posts. Please try again.');
+            const msg = err.response?.data?.message || 'Failed to load posts. Please try again.';
+            toast.error(msg);
             console.error('Fetch posts error:', err);
         } finally {
             setIsLoading(false);
@@ -60,10 +60,12 @@ function Dashboard() {
                 // Optimistic update — remove from UI immediately
                 setPosts((prev) => prev.filter((p) => p._id !== postId));
                 setPagination((prev) => ({ ...prev, total: prev.total - 1 }));
+                toast.success('Post deleted successfully!');
             }
         } catch (err) {
+            const msg = err.response?.data?.message || 'Failed to delete post. Please try again.';
+            toast.error(msg);
             console.error('Delete error:', err);
-            alert(err.response?.data?.message || 'Failed to delete post. Please try again.');
         } finally {
             setDeletingId(null);
         }
@@ -157,16 +159,6 @@ function Dashboard() {
                             </span>
                         )}
                     </div>
-
-                    {/* Error State */}
-                    {error && (
-                        <div style={{
-                            background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-                            color: '#fca5a5', borderRadius: '8px', padding: '1rem', marginBottom: '1rem', fontSize: '0.875rem',
-                        }}>
-                            ⚠️ {error}
-                        </div>
-                    )}
 
                     {/* Loading State */}
                     {isLoading ? (

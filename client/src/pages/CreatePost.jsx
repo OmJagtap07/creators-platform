@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import api from '../services/api';
 import './CreatePost.css';
 
@@ -13,7 +14,6 @@ const CreatePost = () => {
         status: 'draft',
     });
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
 
     const navigate = useNavigate();
 
@@ -23,10 +23,9 @@ const CreatePost = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
 
         if (formData.content.length < 10) {
-            setError('Content must be at least 10 characters.');
+            toast.error('Content must be at least 10 characters.');
             return;
         }
 
@@ -34,10 +33,12 @@ const CreatePost = () => {
         try {
             const response = await api.post('/api/posts', formData);
             if (response.data.success) {
+                toast.success('Post created successfully!');
                 navigate('/dashboard');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to create post. Please try again.');
+            const msg = err.response?.data?.message || 'Failed to create post. Please try again.';
+            toast.error(msg);
         } finally {
             setIsLoading(false);
         }
@@ -60,13 +61,6 @@ const CreatePost = () => {
                         <h1 className="create-title">New Post</h1>
                         <p className="create-subtitle">Share your ideas with the world</p>
                     </div>
-
-                    {/* Error Banner */}
-                    {error && (
-                        <div className="create-error" role="alert">
-                            <span>⚠️</span> {error}
-                        </div>
-                    )}
 
                     <form onSubmit={handleSubmit} className="create-form">
                         {/* Title */}

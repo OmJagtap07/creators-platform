@@ -5,6 +5,7 @@ import connectDB from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
+import errorHandler from './middleware/errorHandler.js';
 
 // Load environment variables
 dotenv.config();
@@ -38,10 +39,15 @@ app.use('/api/auth', authRoutes);
 // Post routes
 app.use('/api/posts', postRoutes);
 
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({ message: 'Route not found' });
+// 404 handler — must come after all routes
+app.use((req, res, next) => {
+    const err = new Error(`Route not found: ${req.originalUrl}`);
+    err.status = 404;
+    next(err);
 });
+
+// Global error handler — must be last middleware with exactly 4 params
+app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
