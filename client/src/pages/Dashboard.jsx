@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import api from '../services/api';
+import socket from '../services/socket';
 import './Dashboard.css';
 
 const CATEGORY_COLORS = {
@@ -43,6 +44,36 @@ function Dashboard() {
     useEffect(() => {
         if (user) fetchPosts(currentPage);
     }, [user, currentPage, fetchPosts]);
+
+    // ── Socket.io lifecycle ──────────────────────────────────────
+    useEffect(() => {
+        // Connect when the authenticated Dashboard mounts
+        socket.connect();
+
+        // Built-in event: connection established
+        socket.on('connect', () => {
+            console.log('🔌 Socket connected:', socket.id);
+        });
+
+        // Built-in event: connection lost
+        socket.on('disconnect', (reason) => {
+            console.log('❌ Socket disconnected:', reason);
+        });
+
+        // Built-in event: failed to connect
+        socket.on('connect_error', (error) => {
+            console.error('Socket connection error:', error.message);
+        });
+
+        // Cleanup: remove listeners & disconnect when component unmounts
+        // This prevents memory leaks and duplicate connections on re-render
+        return () => {
+            socket.off('connect');
+            socket.off('disconnect');
+            socket.off('connect_error');
+            socket.disconnect();
+        };
+    }, []); // Empty array → runs once on mount, cleans up on unmount
 
     const handlePageChange = (newPage) => setCurrentPage(newPage);
 

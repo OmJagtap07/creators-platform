@@ -1,6 +1,8 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import connectDB from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
@@ -49,7 +51,30 @@ app.use((req, res, next) => {
 // Global error handler — must be last middleware with exactly 4 params
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+// Create HTTP server from Express app (required for Socket.io)
+const httpServer = createServer(app);
+
+// Initialize Socket.io — CORS must be configured here separately from Express CORS
+const io = new Server(httpServer, {
+    cors: {
+        origin: process.env.CLIENT_URL || 'http://localhost:5173',
+        methods: ['GET', 'POST'],
+        credentials: true,
+    },
+});
+
+// Socket.io connection handling
+io.on('connection', (socket) => {
+    console.log(`✅ User connected: ${socket.id}`);
+
+    // Handle disconnection
+    socket.on('disconnect', (reason) => {
+        console.log(`❌ User disconnected: ${socket.id} (${reason})`);
+    });
+});
+
+// Start server on the HTTP server (not app) so Socket.io shares the same port
+httpServer.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🔌 Socket.io ready for connections`);
 });
