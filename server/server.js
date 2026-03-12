@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import jwt from 'jsonwebtoken';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import connectDB from './config/db.js';
@@ -19,8 +20,21 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    'http://localhost:5173',
+    'http://localhost:5174',
+].filter(Boolean);
+
 app.use(cors({
-    origin: process.env.CLIENT_URL,
+    origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. mobile apps, curl)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS blocked for origin: ${origin}`));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
 }));
@@ -38,8 +52,39 @@ app.use('/api/users', userRoutes);
 // Auth routes
 app.use('/api/auth', authRoutes);
 
-// Post routes
-app.use('/api/posts', postRoutes);
+// Create HTTP server from Express app (required for Socket.io)
+const httpServer = createServer(app);
+
+// Initialize Socket.io — CORS must be configured here separately from Express CORS
+const io = new Server(httpServer, {
+    cors: {
+        origin: allowedOrigins,
+        methods: ['GET', 'POST'],
+        credentials: true,
+    },
+});
+
+// ── Socket.io JWT Authentication Middleware ──────────────────────────────────
+// Runs before every connection is accepted — verifies the JWT sent by the client
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+
+    if (!token) {
+        return next(new Error('Authentication error: No token provided'));
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Attach decoded user to socket so all handlers know who is connected
+        socket.data.user = decoded;
+        next();
+    } catch (err) {
+        return next(new Error('Authentication error: Invalid or expired token'));
+    }
+});
+
+// Post routes — pass io so the route can emit Socket.io events
+app.use('/api/posts', postRoutes(io));
 
 // 404 handler — must come after all routes
 app.use((req, res, next) => {
@@ -51,21 +96,9 @@ app.use((req, res, next) => {
 // Global error handler — must be last middleware with exactly 4 params
 app.use(errorHandler);
 
-// Create HTTP server from Express app (required for Socket.io)
-const httpServer = createServer(app);
-
-// Initialize Socket.io — CORS must be configured here separately from Express CORS
-const io = new Server(httpServer, {
-    cors: {
-        origin: process.env.CLIENT_URL || 'http://localhost:5173',
-        methods: ['GET', 'POST'],
-        credentials: true,
-    },
-});
-
-// Socket.io connection handling
+// ── Socket.io connection handling ────────────────────────────────────────────
 io.on('connection', (socket) => {
-    console.log(`✅ User connected: ${socket.id}`);
+    console.log(`✅ User connected: ${socket.id} | User: ${socket.data.user.email}`);
 
     // Handle disconnection
     socket.on('disconnect', (reason) => {

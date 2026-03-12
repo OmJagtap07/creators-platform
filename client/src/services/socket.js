@@ -10,10 +10,17 @@ const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
  *   ✅ Connect when user logs in (Dashboard mounts)
  *   ✅ Disconnect when user logs out (Dashboard unmounts)
  *   ❌ Do NOT connect while user is just browsing public pages
+ *
+ * auth.token → JWT sent during handshake so the server can verify
+ *   the user before accepting the connection (Socket.io middleware)
  */
 const socket = io(SOCKET_URL, {
     autoConnect: false,
     withCredentials: true,
+    auth: {
+        // Read the JWT from localStorage — same key used during login
+        token: localStorage.getItem('token'),
+    },
 });
 
 export default socket;

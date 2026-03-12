@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
+import toast2 from 'react-hot-toast';
 import api from '../services/api';
 import socket from '../services/socket';
 import './Dashboard.css';
@@ -62,7 +63,19 @@ function Dashboard() {
 
         // Built-in event: failed to connect
         socket.on('connect_error', (error) => {
-            console.error('Socket connection error:', error.message);
+            console.error('Socket auth error:', error.message);
+        });
+
+        // Real-time: listen for new posts created by any user
+        socket.on('newPost', (data) => {
+            toast2.success(data.message, {
+                icon: '🔔',
+                style: {
+                    background: '#1e293b',
+                    color: '#f1f5f9',
+                    border: '1px solid #334155',
+                },
+            });
         });
 
         // Cleanup: remove listeners & disconnect when component unmounts
@@ -71,6 +84,7 @@ function Dashboard() {
             socket.off('connect');
             socket.off('disconnect');
             socket.off('connect_error');
+            socket.off('newPost'); // Prevent duplicate listeners on re-mount
             socket.disconnect();
         };
     }, []); // Empty array → runs once on mount, cleans up on unmount
@@ -202,7 +216,7 @@ function Dashboard() {
                             }} />
                             <p style={{ margin: 0, fontSize: '0.9rem' }}>Loading posts…</p>
                         </div>
-                    ) : !error && posts.length === 0 ? (
+                    ) : posts.length === 0 ? (
                         /* Empty State */
                         <div style={{
                             textAlign: 'center', padding: '3.5rem 2rem',

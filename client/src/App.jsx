@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'react-hot-toast';
 
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -36,6 +37,8 @@ function App() {
             pauseOnHover
             theme="dark"
           />
+          {/* react-hot-toast Toaster — used for real-time socket notifications */}
+          <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
           <Routes>
             {/* Public routes — always accessible */}
             <Route path="/" element={<Home />} />

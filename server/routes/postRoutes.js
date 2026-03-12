@@ -8,15 +8,20 @@ import {
     deletePost,
 } from '../controllers/postController.js';
 
-const router = express.Router();
+// Export a function that receives the `io` instance so routes can emit events
+const postRoutes = (io) => {
+    const router = express.Router();
 
-// Collection routes (specific before parameterised)
-router.post('/', protect, createPost);
-router.get('/', protect, getPosts);
+    // Collection routes (specific before parameterised)
+    router.post('/', protect, (req, res, next) => createPost(req, res, next, io));
+    router.get('/', protect, getPosts);
 
-// Single-resource routes
-router.get('/:id', protect, getPostById);   // Get post by ID
-router.put('/:id', protect, updatePost);    // Update post
-router.delete('/:id', protect, deletePost);    // Delete post
+    // Single-resource routes
+    router.get('/:id', protect, getPostById);    // Get post by ID
+    router.put('/:id', protect, updatePost);     // Update post
+    router.delete('/:id', protect, deletePost);  // Delete post
 
-export default router;
+    return router;
+};
+
+export default postRoutes;

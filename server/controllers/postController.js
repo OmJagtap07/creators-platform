@@ -10,7 +10,8 @@ const createError = (message, status) => {
 // @desc    Create a new post
 // @route   POST /api/posts
 // @access  Private
-export const createPost = async (req, res, next) => {
+// io — optional Socket.io server instance (passed from postRoutes)
+export const createPost = async (req, res, next, io) => {
     try {
         const { title, content, category, status } = req.body;
 
@@ -27,6 +28,18 @@ export const createPost = async (req, res, next) => {
             status,
             author: req.user._id,
         });
+
+        // Emit real-time event to ALL connected authenticated clients
+        if (io) {
+            io.emit('newPost', {
+                message: `New post created by ${req.user.name}`,
+                post: {
+                    _id: post._id,
+                    title: post.title,
+                    createdBy: req.user.name,
+                },
+            });
+        }
 
         res.status(201).json({
             success: true,
