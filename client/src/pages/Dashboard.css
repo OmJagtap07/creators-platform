@@ -1,0 +1,143 @@
+/* ========== Dashboard ========== */
+.dashboard {
+    padding: 2.5rem 1.5rem;
+    min-height: calc(100vh - 64px - 160px);
+    background: #0f172a;
+}
+
+.dashboard-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.dashboard-header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0;
+}
+
+.dashboard-subtitle {
+    color: #64748b;
+    font-size: 0.92rem;
+    margin: 0.2rem 0 0;
+}
+
+/* Stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+}
+
+.stat-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    transition: border-color 0.2s;
+}
+
+.stat-card:hover {
+    border-color: #6366f1;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.82rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Recent Posts */
+.recent-section {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 1.5rem;
+}
+
+.section-heading {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0 0 1.25rem;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.posts-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.posts-table th {
+    text-align: left;
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid #334155;
+}
+
+.posts-table td {
+    padding: 0.85rem 1rem;
+    color: #94a3b8;
+    border-bottom: 1px solid #1e293b;
+}
+
+.posts-table tr:last-child td {
+    border-bottom: none;
+}
+
+.post-title-cell {
+    color: #f1f5f9 !important;
+    font-weight: 500;
+}
+
+.status-badge {
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-badge.published {
+    background: #14532d;
+    color: #4ade80;
+}
+
+.status-badge.draft {
+    background: #1c1917;
+    color: #78716c;
+}

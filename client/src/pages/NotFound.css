@@ -1,0 +1,48 @@
+/* ========== 404 Not Found ========== */
+.notfound-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 64px - 160px);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    background: #0f172a;
+}
+
+.notfound-inner {
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.notfound-emoji {
+    font-size: 3.5rem;
+}
+
+.notfound-code {
+    font-size: 6rem;
+    font-weight: 900;
+    background: linear-gradient(90deg, #6366f1, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin: 0;
+}
+
+.notfound-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0;
+}
+
+.notfound-text {
+    color: #64748b;
+    font-size: 0.97rem;
+    line-height: 1.6;
+    margin: 0 0 1rem;
+}
