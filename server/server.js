@@ -8,6 +8,7 @@ import connectDB from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
+import uploadRoutes from './routes/upload.js';
 import errorHandler from './middleware/errorHandler.js';
 
 // Load environment variables
@@ -51,6 +52,9 @@ app.use('/api/users', userRoutes);
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+
+// Upload routes
+app.use('/api/upload', uploadRoutes);
 
 // Create HTTP server from Express app (required for Socket.io)
 const httpServer = createServer(app);
