@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
+import ImageUpload from '../components/ImageUpload';
 import './CreatePost.css';
 
 const CATEGORIES = ['Technology', 'Lifestyle', 'Travel', 'Food'];
@@ -16,6 +17,13 @@ const CreatePost = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const navigate = useNavigate();
+
+    // Called by ImageUpload when the user clicks "Upload Image".
+    // formData has the file under key 'image'.
+    // In Lesson 4.7 this will send formData to /api/upload and store the returned URL.
+    const handleUpload = (formData) => {
+        console.log('FormData ready — file object:', formData.get('image'));
+    };
 
     const handleChange = (e) => {
         setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -133,6 +141,11 @@ const CreatePost = () => {
                             <span className={`char-hint ${charCount < 10 && charCount > 0 ? 'char-hint--warn' : ''}`}>
                                 {charCount} characters {charCount < 10 ? `(${10 - charCount} more needed)` : '✓'}
                             </span>
+                        </div>
+
+                        {/* Cover Image Upload */}
+                        <div className="form-group">
+                            <ImageUpload onUpload={handleUpload} />
                         </div>
 
                         {/* Actions */}
