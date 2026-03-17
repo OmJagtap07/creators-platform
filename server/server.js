@@ -1,5 +1,9 @@
+// ⚠️ dotenv MUST be the very first import — before any module that reads process.env.
+// cloudinary.js calls cloudinary.config() during module evaluation (at import time),
+// so if dotenv hasn't run yet, CLOUDINARY_API_KEY etc. will be undefined → "Must supply api_key".
+import 'dotenv/config';
+
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import { createServer } from 'http';
@@ -10,9 +14,7 @@ import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import uploadRoutes from './routes/upload.js';
 import errorHandler from './middleware/errorHandler.js';
-
-// Load environment variables
-dotenv.config();
+import timingMiddleware from './middleware/timing.js';
 
 // Connect to MongoDB
 connectDB();
@@ -41,6 +43,10 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Performance: log response time for every request
+// Slow requests ( > 500ms ) are flagged with 🐌 in the console
+app.use(timingMiddleware);
 
 // Health check route
 app.get('/api/health', (req, res) => {

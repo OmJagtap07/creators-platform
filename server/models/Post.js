@@ -17,6 +17,7 @@ const postSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
             required: true,
+            index: true, // Index for filtering posts by author
         },
         category: {
             type: String,
@@ -37,6 +38,12 @@ const postSchema = new mongoose.Schema(
         timestamps: true, // Adds createdAt and updatedAt automatically
     }
 );
+
+// Compound index: optimises "posts by author, newest first" (the most common query)
+postSchema.index({ author: 1, createdAt: -1 });
+
+// Single-field index: optimises global feed sorted by time
+postSchema.index({ createdAt: -1 });
 
 const Post = mongoose.model('Post', postSchema);
 

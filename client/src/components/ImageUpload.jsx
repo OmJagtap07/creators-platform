@@ -27,11 +27,18 @@ const validateFile = (file) => {
  *                        The FormData object has the file appended under
  *                        the key 'image', matching upload.single('image')
  *                        on the backend.
+ *
+ * IMPORTANT: This component does NOT use a <form> element.
+ * It is always rendered inside an existing <form> (CreatePost).
+ * Nested <form> elements are invalid HTML — browsers route button
+ * clicks unpredictably, often to the outer form, triggering post
+ * creation instead of the image upload. Using a plain <div> avoids
+ * this entirely. The button uses type="button" as a second safeguard.
  */
 const ImageUpload = ({ onUpload }) => {
     const [selectedFile, setSelectedFile] = useState(null);   // File | null
-    const [previewUrl, setPreviewUrl] = useState(null);   // blob URL | null
-    const [error, setError] = useState('');     // validation message
+    const [previewUrl, setPreviewUrl] = useState(null);       // blob URL | null
+    const [error, setError] = useState('');                   // validation message
 
     // ── Cleanup blob URL whenever it changes or component unmounts ──────────
     useEffect(() => {
@@ -53,7 +60,6 @@ const ImageUpload = ({ onUpload }) => {
         if (validationError) {
             setError(validationError);
             setSelectedFile(null);
-            // Revoke any existing preview before clearing it
             if (previewUrl) {
                 URL.revokeObjectURL(previewUrl);
             }
@@ -61,8 +67,7 @@ const ImageUpload = ({ onUpload }) => {
             return;
         }
 
-        // Revoke the old blob URL synchronously to avoid memory leaks
-        // and prevent a brief flash of the old image
+        // Revoke the old blob URL to avoid memory leaks
         if (previewUrl) {
             URL.revokeObjectURL(previewUrl);
         }
@@ -71,10 +76,10 @@ const ImageUpload = ({ onUpload }) => {
         setPreviewUrl(URL.createObjectURL(file));
     };
 
-    // ── Submit handler ───────────────────────────────────────────────────────
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
+    // ── Upload click handler ─────────────────────────────────────────────────
+    // This is a plain function, not a form submit handler.
+    // The button below has type="button" so it never triggers the parent form.
+    const handleUploadClick = () => {
         if (!selectedFile) {
             setError('Please select an image first');
             return;
@@ -91,11 +96,13 @@ const ImageUpload = ({ onUpload }) => {
     };
 
     // ── JSX ──────────────────────────────────────────────────────────────────
+    // <div> wrapper — NOT a <form>. Avoids the nested-form bug where the
+    // browser submits the outer CreatePost form instead of this upload action.
     return (
         <div className="image-upload">
             <p className="image-upload__label">Cover Image</p>
 
-            <form onSubmit={handleSubmit} className="image-upload__form">
+            <div className="image-upload__form">
                 {/* Drop zone / file input area */}
                 <label className="image-upload__dropzone" htmlFor="image-file-input">
                     {previewUrl ? (
@@ -145,16 +152,19 @@ const ImageUpload = ({ onUpload }) => {
                     </div>
                 )}
 
-                {/* Submit button — disabled when no valid file */}
+                {/* type="button" is critical — without it, clicking this button
+                    inside the parent CreatePost <form> would submit that form
+                    and navigate away before the upload even starts. */}
                 <button
-                    type="submit"
+                    type="button"
+                    onClick={handleUploadClick}
                     disabled={!selectedFile || !!error}
                     className="image-upload__btn"
                     id="upload-image-btn"
                 >
                     Upload Image
                 </button>
-            </form>
+            </div>
         </div>
     );
 };
