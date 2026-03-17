@@ -13,7 +13,7 @@ const createError = (message, status) => {
 // io — optional Socket.io server instance (passed from postRoutes)
 export const createPost = async (req, res, next, io) => {
     try {
-        const { title, content, category, status } = req.body;
+        const { title, content, category, status, coverImage } = req.body;
 
         // Validate required fields
         if (!title || !content) {
@@ -26,6 +26,7 @@ export const createPost = async (req, res, next, io) => {
             content,
             category,
             status,
+            coverImage: coverImage || null, // Cloudinary URL or null for text-only posts
             author: req.user._id,
         });
 

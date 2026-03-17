@@ -236,6 +236,22 @@ function Dashboard() {
                             <div className="posts-cards">
                                 {posts.map((post) => (
                                     <div key={post._id} className="post-card">
+                                        {/* Cover image — only renders if a Cloudinary URL was saved */}
+                                        {post.coverImage && (
+                                            <img
+                                                src={post.coverImage}
+                                                alt={`Cover image for ${post.title}`}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '180px',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '8px 8px 0 0',
+                                                    display: 'block',
+                                                    marginBottom: '1rem',
+                                                }}
+                                            />
+                                        )}
+
                                         <div className="post-card-header">
                                             <h3 className="post-card-title">{post.title}</h3>
                                             <span className={`status-badge ${post.status}`}>{post.status}</span>

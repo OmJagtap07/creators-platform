@@ -16,19 +16,54 @@ const CreatePost = () => {
     });
     const [isLoading, setIsLoading] = useState(false);
 
+    // ── Image upload state ─────────────────────────────────────────
+    const [uploading, setUploading] = useState(false);       // true while POST /api/upload is in flight
+    const [coverImageUrl, setCoverImageUrl] = useState(null); // Cloudinary secure_url after upload
+    const [uploadError, setUploadError] = useState('');       // inline error message for upload failures
+
     const navigate = useNavigate();
 
-    // Called by ImageUpload when the user clicks "Upload Image".
-    // formData has the file under key 'image'.
-    // In Lesson 4.7 this will send formData to /api/upload and store the returned URL.
-    const handleUpload = (formData) => {
-        console.log('FormData ready — file object:', formData.get('image'));
+    // ── handleUpload ───────────────────────────────────────────────
+    // Called by <ImageUpload onUpload={handleUpload}> when the user
+    // clicks "Upload Image" after selecting a valid file.
+    //
+    // Two-step pattern:
+    //   1. Upload image → GET back a Cloudinary URL
+    //   2. Store URL in state → use it in handleSubmit (post creation)
+    //
+    // Note: We DO NOT set Content-Type manually. The browser sets
+    // "multipart/form-data; boundary=…" automatically when it detects
+    // FormData, and our axios instance no longer overrides it globally.
+    const handleUpload = async (formData) => {
+        setUploading(true);
+        setUploadError('');
+
+        try {
+            const response = await api.post('/api/upload', formData);
+            // response.data: { success: true, url: "https://res.cloudinary.com/...", publicId: "..." }
+
+            setCoverImageUrl(response.data.url);
+            toast.success('✅ Image uploaded successfully!');
+        } catch (error) {
+            const message = error.response?.data?.message || 'Image upload failed. Please try again.';
+            setUploadError(message);
+            toast.error(message);
+        } finally {
+            // Always reset the spinner — whether the request succeeded or failed.
+            // Without finally, an exception would leave uploading === true forever.
+            setUploading(false);
+        }
     };
 
     const handleChange = (e) => {
         setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
+    // ── handleSubmit ───────────────────────────────────────────────
+    // Creates the post. coverImageUrl is included as-is:
+    //   - Cloudinary URL string if the user uploaded an image
+    //   - null if no image was uploaded (text-only post)
+    // The backend schema has coverImage: { default: null }, so both are valid.
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -37,9 +72,20 @@ const CreatePost = () => {
             return;
         }
 
+        // Block submit while image is still uploading — the URL isn't ready yet
+        if (uploading) {
+            toast.error('Please wait for the image to finish uploading.');
+            return;
+        }
+
         setIsLoading(true);
         try {
-            const response = await api.post('/api/posts', formData);
+            const postPayload = {
+                ...formData,
+                coverImage: coverImageUrl, // null if no image; Cloudinary URL otherwise
+            };
+
+            const response = await api.post('/api/posts', postPayload);
             if (response.data.success) {
                 toast.success('Post created successfully!');
                 navigate('/dashboard');
@@ -53,6 +99,10 @@ const CreatePost = () => {
     };
 
     const charCount = formData.content.length;
+
+    // The submit button is disabled while either the image upload or
+    // the post creation HTTP request is in flight.
+    const isSubmitDisabled = isLoading || uploading;
 
     return (
         <main className="create-page">
@@ -146,6 +196,33 @@ const CreatePost = () => {
                         {/* Cover Image Upload */}
                         <div className="form-group">
                             <ImageUpload onUpload={handleUpload} />
+
+                            {/* Upload loading indicator */}
+                            {uploading && (
+                                <p style={{ color: '#94a3b8', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                                    ⏳ Uploading image to Cloudinary, please wait…
+                                </p>
+                            )}
+
+                            {/* Upload success confirmation */}
+                            {coverImageUrl && !uploading && (
+                                <p style={{ color: '#22c55e', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                                    ✅ Image ready — will be attached to your post.
+                                </p>
+                            )}
+
+                            {/* Upload error (inline, persists until user tries again) */}
+                            {/* TODO: if the user re-selects an image and uploads again, the old
+                                orphaned image still exists in Cloudinary. Deleting it requires
+                                calling the Cloudinary destroy API with the publicId — a future improvement. */}
+                            {uploadError && (
+                                <p
+                                    style={{ color: '#f87171', fontSize: '0.875rem', marginTop: '0.5rem' }}
+                                    role="alert"
+                                >
+                                    ⚠️ {uploadError}
+                                </p>
+                            )}
                         </div>
 
                         {/* Actions */}
@@ -155,11 +232,15 @@ const CreatePost = () => {
                             </Link>
                             <button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={isSubmitDisabled}
                                 className="btn-submit"
                                 id="create-post-btn"
                             >
-                                {isLoading ? (
+                                {uploading ? (
+                                    <span className="btn-loading">
+                                        <span className="spinner" /> Uploading image…
+                                    </span>
+                                ) : isLoading ? (
                                     <span className="btn-loading">
                                         <span className="spinner" /> Creating…
                                     </span>

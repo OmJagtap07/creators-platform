@@ -28,6 +28,10 @@ const postSchema = new mongoose.Schema(
             enum: ['draft', 'published'],
             default: 'draft',
         },
+        coverImage: {
+            type: String,
+            default: null, // Optional — text-only posts store null
+        },
     },
     {
         timestamps: true, // Adds createdAt and updatedAt automatically

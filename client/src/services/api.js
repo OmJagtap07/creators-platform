@@ -1,12 +1,14 @@
 import axios from 'axios';
 
 // ── Axios instance ─────────────────────────────────────────────
+// NOTE: Do NOT set a global Content-Type here.
+// For JSON requests axios picks the right header automatically.
+// For FormData (file uploads) the browser must set Content-Type
+// to multipart/form-data WITH the boundary string — a hardcoded
+// JSON header would override that and break every upload.
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
-    timeout: 10000, // 10-second timeout
-    headers: {
-        'Content-Type': 'application/json',
-    },
+    timeout: 30000, // 30-second timeout (images can be slow on first upload)
 });
 
 // ── Request interceptor: attach JWT to every outgoing request ──
