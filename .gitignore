@@ -5,6 +5,7 @@ node_modules/
 
 # Environment variables — NEVER commit these
 .env
+# .env.example is safe — contains placeholder values only
 .env.local
 .env.development.local
 .env.test.local
