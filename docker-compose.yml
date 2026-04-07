@@ -28,6 +28,7 @@ services:
       # Override MONGO_URI so the server reaches the 'mongo' container,
       # not localhost (which won't resolve inside Docker Compose).
       MONGO_URI: mongodb://admin:password123@mongo:27017/creator-platform?authSource=admin
+      CLIENT_URL: http://localhost:3000
     depends_on:
       - mongo
 
