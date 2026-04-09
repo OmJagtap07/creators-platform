@@ -1,0 +1,4 @@
+﻿CONTAINER ID   IMAGE                      COMMAND                  CREATED         STATUS         PORTS                                             NAMES
+46d933564ed0   creators-platform-client   "/docker-entrypoint.ΓÇª"   6 seconds ago   Up 5 seconds   0.0.0.0:3000->80/tcp, [::]:3000->80/tcp           creator-platform-client
+ace43780acff   creators-platform-server   "docker-entrypoint.sΓÇª"   6 seconds ago   Up 5 seconds   0.0.0.0:5000->5000/tcp, [::]:5000->5000/tcp       creator-platform-server
+d0b98eb4b892   mongo:latest               "docker-entrypoint.sΓÇª"   6 seconds ago   Up 5 seconds   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp   mongodb

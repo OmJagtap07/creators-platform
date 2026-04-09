@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: creator-platform-server
+    ports:
+      - "5000:5000"
+    # Secrets are loaded from server/.env — never committed to Git.
+    # The MONGO_URI inline override uses the Docker service hostname 'mongo'
+    # instead of 'localhost', which only resolves inside the Compose network.
+    env_file:
+      - ./server/.env
+    environment:
+      # Override MONGO_URI so the server reaches the 'mongo' container,
+      # not localhost (which won't resolve inside Docker Compose).
+      MONGO_URI: mongodb://admin:password123@mongo:27017/creator-platform?authSource=admin
+      CLIENT_URL: http://localhost:3000
+    depends_on:
+      - mongo
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: creator-platform-client
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+
+volumes:
+  mongo-data:

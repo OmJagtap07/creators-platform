@@ -1,0 +1,482 @@
+{
+    "info": {
+        "_postman_id": "cp-api-collection-001",
+        "name": "Creator's Platform API",
+        "description": "API endpoints for the Creator's Platform MERN application. Covers Health, Auth, Posts, Users and Upload routes.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [],
+    "item": [
+        {
+            "name": "Health",
+            "description": "Server health verification",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseURL}}/api/health",
+                            "host": [
+                                "{{baseURL}}"
+                            ],
+                            "path": [
+                                "api",
+                                "health"
+                            ]
+                        },
+                        "description": "Verifies the server is running. No auth required."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has message field', function () {",
+                                    "    const json = pm.response.json();",
+                                    "    pm.expect(json).to.have.property('message');",
+                                    "});",
+                                    "",
+                                    "pm.test('Response time is below 500ms', function () {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Auth",
+            "description": "Registration and login flows",
+            "item": [
+                {
+                    "name": "Register User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/users/register",
+                            "host": [
+                                "{{baseURL}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "register"
+                            ]
+                        },
+                        "description": "Creates a new user account. Automatically saves the returned JWT to the authToken environment variable."
+                    },
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "// Generate a unique email so repeat runs never fail with 'email already exists'",
+                                    "const timestamp = Date.now();",
+                                    "pm.variables.set('uniqueEmail', `user${timestamp}@example.com`);"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 201', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has token', function () {",
+                                    "    const json = pm.response.json();",
+                                    "    pm.expect(json).to.have.property('token');",
+                                    "    pm.expect(json.token).to.be.a('string');",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has user object with email', function () {",
+                                    "    const json = pm.response.json();",
+                                    "    pm.expect(json).to.have.property('user');",
+                                    "    pm.expect(json.user).to.have.property('email');",
+                                    "    pm.expect(json.user).to.have.property('name');",
+                                    "});",
+                                    "",
+                                    "// Auto-save token to environment",
+                                    "const json = pm.response.json();",
+                                    "if (json.token) {",
+                                    "    pm.environment.set('authToken', json.token);",
+                                    "    console.log('Token saved to environment:', json.token.substring(0, 30) + '...');",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "response": []
+                },
+                {
+                    "name": "Login User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/auth/login",
+                            "host": [
+                                "{{baseURL}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Authenticates an existing user and returns a JWT. Token is automatically saved to authToken environment variable."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has token', function () {",
+                                    "    const json = pm.response.json();",
+                                    "    pm.expect(json).to.have.property('token');",
+                                    "    pm.expect(json.token).to.be.a('string');",
+                                    "});",
+                                    "",
+                                    "pm.test('Response time is acceptable', function () {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                                    "});",
+                                    "",
+                                    "// Auto-save fresh token to environment",
+                                    "const json = pm.response.json();",
+                                    "if (json.token) {",
+                                    "    pm.environment.set('authToken', json.token);",
+                                    "    console.log('Fresh token saved.');",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Posts",
+            "description": "CRUD operations for posts. All routes require a valid Bearer token.",
+            "item": [
+                {
+                    "name": "Get All Posts",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/posts?page=1&limit=10",
+                            "host": [
+                                "{{baseURL}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Returns a paginated list of posts. Requires auth."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has posts array', function () {",
+                                    "    const json = pm.response.json();",
+                                    "    pm.expect(json).to.have.property('posts');",
+                                    "    pm.expect(json.posts).to.be.an('array');",
+                                    "});",
+                                    "",
+                                    "pm.test('Success flag is true', function () {",
+                                    "    const json = pm.response.json();",
+                                    "    pm.expect(json.success).to.be.true;",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "response": []
+                },
+                {
+                    "name": "Create Post",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"My Post from Postman\",\n  \"content\": \"This is test content created via Postman to verify the API works correctly.\",\n  \"category\": \"Technology\",\n  \"status\": \"published\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/posts",
+                            "host": [
+                                "{{baseURL}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts"
+                            ]
+                        },
+                        "description": "Creates a new post. Requires auth. Saves the created post ID to postId variable."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 201', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has post object', function () {",
+                                    "    const json = pm.response.json();",
+                                    "    pm.expect(json).to.have.property('post');",
+                                    "    pm.expect(json.post).to.have.property('_id');",
+                                    "    pm.expect(json.post).to.have.property('title');",
+                                    "});",
+                                    "",
+                                    "pm.test('Post title matches request', function () {",
+                                    "    const json = pm.response.json();",
+                                    "    pm.expect(json.post.title).to.equal('My Post from Postman');",
+                                    "});",
+                                    "",
+                                    "// Save post ID for Update and Delete requests",
+                                    "const json = pm.response.json();",
+                                    "if (json.post && json.post._id) {",
+                                    "    pm.environment.set('postId', json.post._id);",
+                                    "    console.log('Post ID saved:', json.post._id);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "response": []
+                },
+                {
+                    "name": "Get Post by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/posts/{{postId}}",
+                            "host": [
+                                "{{baseURL}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{postId}}"
+                            ]
+                        },
+                        "description": "Fetches a single post by its ID. Uses the postId saved from Create Post."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Post ID matches', function () {",
+                                    "    const json = pm.response.json();",
+                                    "    const postId = pm.environment.get('postId');",
+                                    "    pm.expect(json.post._id).to.equal(postId);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "response": []
+                },
+                {
+                    "name": "Update Post",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Updated Post Title\",\n  \"content\": \"This content has been updated via the PUT endpoint to verify update works.\",\n  \"status\": \"published\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/posts/{{postId}}",
+                            "host": [
+                                "{{baseURL}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{postId}}"
+                            ]
+                        },
+                        "description": "Updates an existing post. Requires auth and ownership."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Title was updated', function () {",
+                                    "    const json = pm.response.json();",
+                                    "    pm.expect(json.post.title).to.equal('Updated Post Title');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "response": []
+                },
+                {
+                    "name": "Delete Post",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/posts/{{postId}}",
+                            "host": [
+                                "{{baseURL}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{postId}}"
+                            ]
+                        },
+                        "description": "Deletes a post by ID. Requires auth and ownership."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Success flag is true', function () {",
+                                    "    const json = pm.response.json();",
+                                    "    pm.expect(json.success).to.be.true;",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "response": []
+                }
+            ]
+        }
+    ]
+}

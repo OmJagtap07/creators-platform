@@ -1,36 +1,77 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
+// ⚠️ dotenv is loaded inside app.js as the very first import.
+// server.js only handles: DB connection, Socket.io, and server startup.
+
+import app from './app.js';
+import jwt from 'jsonwebtoken';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import connectDB from './config/db.js';
-import userRoutes from './routes/userRoutes.js';
+import postRoutes from './routes/postRoutes.js';
 
-// Load environment variables
-dotenv.config();
-
-// Connect to MongoDB
-connectDB();
-
-const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// ── Connect to MongoDB ────────────────────────────────────────────────────────
+connectDB();
 
-// Health check route
-app.get('/api/health', (req, res) => {
-    res.json({ message: 'Server is running!' });
+// ── Create HTTP server from Express app (required for Socket.io) ──────────────
+const httpServer = createServer(app);
+
+// ── Allowed origins (must match app.js) ──────────────────────────────────────
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    'http://localhost:5173',
+    'http://localhost:5174',
+].filter(Boolean);
+
+// ── Initialize Socket.io ──────────────────────────────────────────────────────
+const io = new Server(httpServer, {
+    cors: {
+        origin: allowedOrigins,
+        methods: ['GET', 'POST'],
+        credentials: true,
+    },
 });
 
-// User routes
-app.use('/api/users', userRoutes);
+// ── Socket.io JWT Authentication Middleware ───────────────────────────────────
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
 
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({ message: 'Route not found' });
+    if (!token) {
+        return next(new Error('Authentication error: No token provided'));
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        socket.data.user = decoded;
+        next();
+    } catch (err) {
+        return next(new Error('Authentication error: Invalid or expired token'));
+    }
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+// ── Post routes — pass io so the route can emit Socket.io events ──────────────
+app.use('/api/posts', postRoutes(io));
+
+import errorHandler from './middleware/errorHandler.js';
+
+// ── Socket.io connection handling ─────────────────────────────────────────────
+io.on('connection', (socket) => {
+    console.log(`✅ User connected: ${socket.id} | User: ${socket.data.user.email}`);
+
+    socket.on('disconnect', (reason) => {
+        console.log(`❌ User disconnected: ${socket.id} (${reason})`);
+    });
+});
+
+app.use((req, res, next) => {
+    const err = new Error(`Route not found: ${req.originalUrl}`);
+    err.status = 404;
+    next(err);
+});
+app.use(errorHandler);
+
+// ── Start server ──────────────────────────────────────────────────────────────
+httpServer.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🔌 Socket.io ready for connections`);
 });

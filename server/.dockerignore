@@ -1,0 +1,10 @@
+node_modules
+.env
+.env.*
+tests
+*.log
+npm-debug.log*
+.git
+.gitignore
+README.md
+babel.config.json

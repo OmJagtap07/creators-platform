@@ -1,0 +1,314 @@
+/* ========== Dashboard ========== */
+.dashboard {
+    padding: 2.5rem 1.5rem;
+    min-height: calc(100vh - 64px - 160px);
+    background: #0f172a;
+}
+
+.dashboard-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.dashboard-header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0;
+}
+
+.dashboard-subtitle {
+    color: #64748b;
+    font-size: 0.92rem;
+    margin: 0.2rem 0 0;
+}
+
+/* Stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+}
+
+.stat-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    transition: border-color 0.2s;
+}
+
+.stat-card:hover {
+    border-color: #6366f1;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.82rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Recent Posts */
+.recent-section {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 1.5rem;
+}
+
+.section-heading {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0 0 1.25rem;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.posts-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.posts-table th {
+    text-align: left;
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid #334155;
+}
+
+.posts-table td {
+    padding: 0.85rem 1rem;
+    color: #94a3b8;
+    border-bottom: 1px solid #1e293b;
+}
+
+.posts-table tr:last-child td {
+    border-bottom: none;
+}
+
+.post-title-cell {
+    color: #f1f5f9 !important;
+    font-weight: 500;
+}
+
+.status-badge {
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-badge.published {
+    background: #14532d;
+    color: #4ade80;
+}
+
+.status-badge.draft {
+    background: #1c1917;
+    color: #78716c;
+}
+
+/* ── Post Cards ─────────────────────────────────────────────── */
+.posts-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.post-card {
+    background: #0f172a;
+    border: 1px solid #1e3a5f;
+    border-radius: 10px;
+    padding: 1.2rem 1.5rem;
+    transition: border-color 0.2s, transform 0.15s;
+}
+
+.post-card:hover {
+    border-color: #3b82f6;
+    transform: translateY(-1px);
+}
+
+.post-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.6rem;
+}
+
+.post-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin: 0;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.post-card-preview {
+    color: #64748b;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin: 0 0 0.75rem;
+}
+
+.post-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.category-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(100, 116, 139, 0.15);
+    color: var(--cat-color, #64748b);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.post-date {
+    font-size: 0.78rem;
+    color: #475569;
+    margin-left: auto;
+}
+
+/* ── Pagination ──────────────────────────────────────────────── */
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding: 1rem 0 0;
+    border-top: 1px solid #334155;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.pagination-btn {
+    padding: 0.5rem 1.1rem;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 7px;
+    color: #94a3b8;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.08);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    color: #64748b;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.pagination-info strong {
+    color: #94a3b8;
+}
+
+/* ── Loading spinner ─────────────────────────────────────────── */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+/* -- Post Card Action Buttons -------------------------------- */
+.post-card-actions {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.9rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #1e3a5f;
+}
+
+.btn-card-edit,
+.btn-card-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 7px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, opacity 0.2s;
+    text-decoration: none;
+    border: 1px solid transparent;
+}
+
+.btn-card-edit {
+    background: rgba(99, 102, 241, 0.12);
+    color: #818cf8;
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.btn-card-edit:hover {
+    background: rgba(99, 102, 241, 0.22);
+    border-color: #818cf8;
+    color: #c7d2fe;
+}
+
+.btn-card-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.25);
+}
+
+.btn-card-delete:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #f87171;
+    color: #fca5a5;
+}
+
+.btn-card-delete:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
