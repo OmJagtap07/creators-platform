@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 
 // Server URL — uses Vite env var with fallback for local dev
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_API_URL || 'https://creator-platform-api-dgyf.onrender.com';
 
 /**
  * Centralised Socket.io instance.
