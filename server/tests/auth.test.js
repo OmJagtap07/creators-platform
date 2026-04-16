@@ -42,7 +42,7 @@ describe('Auth Routes', () => {
                 password: 'password123',
             });
 
-            expect(res.status).toBe(201);
+            expect(res.status).toBe(999);
             expect(res.body).toHaveProperty('_id');
             expect(res.body).toHaveProperty('name', 'Test User');
             expect(res.body).toHaveProperty('email', 'testuser@example.com');
