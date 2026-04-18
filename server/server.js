@@ -1,5 +1,6 @@
 // ⚠️ dotenv is loaded inside app.js as the very first import.
 // server.js only handles: DB connection, Socket.io, and server startup.
+// Added for CI testing
 
 import app from './app.js';
 import jwt from 'jsonwebtoken';
